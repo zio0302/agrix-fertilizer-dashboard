@@ -125,9 +125,7 @@ tr:last-child td{border-bottom:none}
 
 <!-- 쿠키 연동 배너 -->
 <div id="cookieBanner" style="background:rgba(251,191,36,.08);border-bottom:1px solid rgba(251,191,36,.2);padding:10px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-  <div style="display:flex;align-items:center;gap:8px">
-    <span id="cookieStatus" style="font-size:0.8rem;color:#fbbf24;font-weight:600">⚠️ 실시간 데이터 미연결 (샘플 표시 중)</span>
-  </div>
+  <span id="cookieStatus" style="font-size:0.8rem;color:#fbbf24;font-weight:600">⚠️ 샘플 데이터 표시 중</span>
   <button onclick="showCookieGuide()" style="background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.4);color:#fbbf24;padding:4px 14px;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:700;font-family:inherit">🔑 실제 데이터 연동하기</button>
   <span id="cookieOk" style="display:none;font-size:0.8rem;color:#4ade80;font-weight:600">✅ 실시간 데이터 연결됨</span>
 </div>
@@ -135,32 +133,32 @@ tr:last-child td{border-bottom:none}
 <!-- 쿠키 연동 가이드 모달 -->
 <div id="cookieModal" style="display:none;position:fixed;inset:0;background:rgba(8,14,30,.92);z-index:300;align-items:center;justify-content:center">
   <div style="background:#0f1a2e;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:32px;max-width:560px;width:90%">
-    <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:8px">🔑 실시간 데이터 연동 가이드</h2>
-    <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:20px">아래 북마클릿을 이용하면 agrix 정부 데이터를 실시간으로 볼 수 있습니다.</p>
-    
-    <div style="background:#1a2840;border-radius:10px;padding:16px;margin-bottom:16px">
-      <div style="font-size:0.75rem;color:#fbbf24;font-weight:700;margin-bottom:8px">📌 1단계 · 북마클릿 설치</div>
-      <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:10px">아래 버튼을 즐겨찾기 바에 드래그하세요. (또는 새 북마크를 만들고 URL에 아래 코드를 붙여넣으세요)</p>
-      <a id="bookmarkletLink" href="" style="display:inline-block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:8px 18px;border-radius:8px;font-size:0.82rem;font-weight:700;text-decoration:none;cursor:grab">🌱 agrix 데이터 연동</a>
+    <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px">🔑 실시간 데이터 연동</h2>
+    <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:20px">아래 3단계로 agrix 실제 데이터를 연동하세요.</p>
+
+    <!-- 1단계 -->
+    <div style="background:#1a2840;border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-size:0.75rem;color:#fbbf24;font-weight:700;margin-bottom:8px">① agrix 페이지에서 북마클릿 실행</div>
+      <p style="font-size:0.76rem;color:#94a3b8;margin-bottom:10px">아래 버튼을 즐겨찾기 바에 드래그한 후, <a href="https://uni.agrix.go.kr/docs7/biOlap/fixType.do?reportId=eqpt_oudor_area_item" target="_blank" style="color:#60a5fa">agrix 페이지</a>에서 클릭하세요</p>
+      <a id="bookmarkletLink" href="" style="display:inline-block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:7px 16px;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;cursor:grab">🌱 agrix 쿠키 복사</a>
+      <p style="font-size:0.72rem;color:#475569;margin-top:8px">※ 클릭하면 쿠키 값을 복사할 수 있는 창이 뜹니다. 전체 선택 후 복사(Ctrl+A → Ctrl+C)</p>
     </div>
-    
-    <div style="background:#1a2840;border-radius:10px;padding:16px;margin-bottom:16px">
-      <div style="font-size:0.75rem;color:#60a5fa;font-weight:700;margin-bottom:8px">📌 2단계 · agrix 페이지에서 클릭</div>
-      <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:8px">아래 링크로 agrix를 열고, 설치한 북마클릿을 클릭하세요:</p>
-      <a href="https://uni.agrix.go.kr/docs7/biOlap/fixType.do?reportId=eqpt_oudor_area_item" target="_blank" style="color:#60a5fa;font-size:0.78rem">🔗 agrix 농작물 재배현황 열기 →</a>
+
+    <!-- 2단계 -->
+    <div style="background:#1a2840;border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-size:0.75rem;color:#60a5fa;font-weight:700;margin-bottom:8px">② 아래에 붙여넣기</div>
+      <textarea id="cookiePasteInput" placeholder="복사한 쿠키 값을 여기에 붙여넣으세요 (Ctrl+V)" style="width:100%;background:#0f1a2e;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#f1f5f9;font-size:0.73rem;padding:10px;font-family:monospace;resize:vertical;min-height:70px;outline:none;box-sizing:border-box"></textarea>
     </div>
-    
-    <div style="background:#1a2840;border-radius:10px;padding:16px;margin-bottom:20px">
-      <div style="font-size:0.75rem;color:#a78bfa;font-weight:700;margin-bottom:8px">📌 3단계 · 이 페이지에서 조회</div>
-      <p style="font-size:0.78rem;color:#94a3b8">연동 완료 후 이 대시보드로 돌아와 <strong>조회 버튼</strong>을 누르면 실제 데이터가 표시됩니다.</p>
-    </div>
-    
+
+    <!-- 3단계 -->
     <div style="display:flex;gap:10px">
-      <button onclick="checkCookieStatus()" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);color:#4ade80;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;font-family:inherit">🔄 연결 상태 확인</button>
-      <button onclick="document.getElementById('cookieModal').style.display='none'" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#94a3b8;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit">닫기</button>
+      <button onclick="applyCookies()" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;font-size:0.83rem;font-weight:700;font-family:inherit">✅ 연동 적용 + 조회</button>
+      <button onclick="document.getElementById('cookieModal').style.display='none'" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#94a3b8;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:0.83rem;font-family:inherit">닫기</button>
     </div>
+    <p id="cookieApplyMsg" style="font-size:0.76rem;color:#f87171;margin-top:10px;display:none"></p>
   </div>
 </div>
+
 
 
 <main class="main">
@@ -580,23 +578,55 @@ function hideMsg(){['errBox','infoBox'].forEach(id=>document.getElementById(id).
 window.addEventListener('scroll',()=>document.getElementById('toTop').classList.toggle('on',scrollY>300));
 /* ===== 북마클릿 & 쿠키 연동 ===== */
 
-// 북마클릿 코드: agrix 페이지에서 클릭 시 쿠키를 localhost:3031로 전송
+// 북마클릿: fetch 대신 prompt()로 쿠키를 표시 → 사용자가 복사 후 붙여넣기
+// (HTTPS→HTTP fetch는 브라우저가 차단하므로 이 방법 사용)
 const BOOKMARKLET_CODE = `javascript:(function(){
-  fetch('http://localhost:3031/set-cookies',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({cookies:document.cookie})
-  }).then(r=>r.json()).then(d=>{
-    if(d.ok) alert('✅ agrix 쿠키 연동 완료! 대시보드로 돌아가서 조회하세요.');
-    else alert('❌ 연동 실패. 서버가 실행 중인지 확인하세요.');
-  }).catch(()=>alert('❌ 서버 연결 실패 (node server.js가 실행 중인지 확인)'));
+  var c=document.cookie;
+  if(!c){alert('쿠키가 없습니다. agrix 페이지에서 데이터를 조회한 후 다시 시도하세요.');return;}
+  prompt('아래 전체를 복사(Ctrl+A→Ctrl+C)하여 대시보드에 붙여넣으세요:',c);
 })();`;
 
 function showCookieGuide() {
-  // 북마클릿 링크에 코드 설정
   document.getElementById('bookmarkletLink').href = BOOKMARKLET_CODE;
+  document.getElementById('cookiePasteInput').value = '';
+  document.getElementById('cookieApplyMsg').style.display = 'none';
   document.getElementById('cookieModal').style.display = 'flex';
 }
+
+// 붙여넣은 쿠키를 서버에 전송
+async function applyCookies() {
+  const cookieStr = document.getElementById('cookiePasteInput').value.trim();
+  const msg = document.getElementById('cookieApplyMsg');
+  if(!cookieStr) {
+    msg.textContent = '쿠키를 먼저 붙여넣어주세요.';
+    msg.style.display = 'block'; msg.style.color = '#f87171'; return;
+  }
+  if(!IS_PROXY) {
+    msg.textContent = 'node server.js 로 서버를 실행 후 localhost:3031 에서 이용하세요.';
+    msg.style.display = 'block'; msg.style.color = '#fbbf24'; return;
+  }
+  try {
+    const r = await fetch('/set-cookies', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({cookies: cookieStr})
+    });
+    const d = await r.json();
+    if(d.ok) {
+      document.getElementById('cookieStatus').style.display = 'none';
+      document.getElementById('cookieOk').style.display = 'inline';
+      document.querySelector('#cookieBanner button').style.display = 'none';
+      document.getElementById('cookieModal').style.display = 'none';
+      search(); // 실제 데이터 조회
+    } else {
+      msg.textContent = '서버 오류. 다시 시도해주세요.';
+      msg.style.display = 'block'; msg.style.color = '#f87171';
+    }
+  } catch(e) {
+    msg.textContent = 'localhost:3031 서버가 실행 중인지 확인하세요.';
+    msg.style.display = 'block'; msg.style.color = '#f87171';
+  }
+}
+
 
 async function checkCookieStatus() {
   if(!IS_PROXY) return;
