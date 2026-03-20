@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>🌱 비료 영업 인텔리전스</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080e1e;--card:#0f1a2e;--border:rgba(255,255,255,0.07);
+  --green:#4ade80;--blue:#60a5fa;--amber:#fbbf24;--purple:#a78bfa;--rose:#f87171;--teal:#2dd4bf;
+  --t1:#f1f5f9;--t2:#94a3b8;--t3:#475569;
+}
+body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.hd{background:linear-gradient(135deg,#0d1b2a,#1a3a5c);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.hd-left{display:flex;align-items:center;gap:12px}
+.hd-icon{font-size:2rem;animation:bounce 2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.hd h1{font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,#4ade80,#60a5fa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hd p{font-size:0.72rem;color:var(--t2);margin-top:1px}
+.hd-badge{background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.35);color:var(--green);padding:5px 14px;border-radius:20px;font-size:0.72rem;font-weight:700}
+.filter{background:var(--card);border-bottom:1px solid var(--border);padding:14px 32px}
+.filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.f-group{display:flex;align-items:center;gap:6px}
+.f-label{font-size:0.73rem;font-weight:700;color:var(--t2);white-space:nowrap}
+select{background:#1a2840;color:var(--t1);border:1px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:0.82rem;font-family:inherit;cursor:pointer;outline:none;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s}
+select:focus{border-color:var(--green)}
+.btn{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:8px;padding:7px 20px;font-size:0.83rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(34,197,94,.4)}
+.btn-sm{background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.35);color:var(--blue);padding:5px 12px;font-size:0.75rem;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s}
+.btn-sm:hover{background:rgba(96,165,250,.25)}
+.main{padding:24px 32px;max-width:1700px;margin:0 auto}
+.overlay{display:none;position:fixed;inset:0;background:rgba(8,14,30,.88);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.overlay.on{display:flex}
+.spin{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{display:none;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px 18px;color:var(--rose);margin-bottom:20px;font-size:0.83rem}
+.err.on{display:block}
+.info{display:none;background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.3);border-radius:10px;padding:12px 18px;color:var(--blue);margin-bottom:20px;font-size:0.82rem}
+.info.on{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:transform .2s}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--ac,var(--green))}
+.kpi:hover{transform:translateY(-2px)}
+.kpi-label{font-size:0.7rem;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.kpi-val{font-size:1.9rem;font-weight:800;color:var(--ac,var(--green));line-height:1}
+.kpi-unit{font-size:0.73rem;color:var(--t3);margin-top:3px}
+.kpi-ico{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:2.2rem;opacity:.12}
+.chart-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.c-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.c-title{font-size:0.85rem;font-weight:700;margin-bottom:2px}
+.c-sub{font-size:0.71rem;color:var(--t3);margin-bottom:16px}
+.c-wrap{position:relative;height:280px}
+.tbl-section{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.tbl-top{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tbl-ttl{font-size:0.85rem;font-weight:700}
+.tbl-sub{font-size:0.7rem;color:var(--t3);margin-top:1px}
+.search-box{background:#1a2840;border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--t1);font-size:0.78rem;font-family:inherit;width:200px;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:var(--blue)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.8rem}
+thead{background:rgba(255,255,255,.025)}
+th{padding:10px 14px;font-weight:700;color:var(--t2);font-size:0.7rem;white-space:nowrap;border-bottom:1px solid var(--border);text-align:right}
+th.left{text-align:left}
+td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.035);white-space:nowrap;color:var(--t2);text-align:right}
+td.left{color:var(--t1);font-weight:600;text-align:left}
+td.sec{color:var(--t2);text-align:left}
+tr:hover td{background:rgba(255,255,255,.025)}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:0.68rem;font-weight:700;white-space:nowrap}
+.s{background:rgba(248,113,113,.15);color:var(--rose);border:1px solid rgba(248,113,113,.3)}
+.a{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.b{background:rgba(251,191,36,.12);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+.c{background:rgba(96,165,250,.12);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
+.d{background:rgba(71,85,105,.2);color:var(--t2);border:1px solid rgba(71,85,105,.3)}
+.tot td{background:rgba(74,222,128,.05);color:var(--green);font-weight:700;border-top:1px solid rgba(74,222,128,.2)}
+.tot td.left{color:var(--green)}
+.empty{text-align:center;padding:50px;color:var(--t3);font-size:.85rem}
+.to-top{position:fixed;bottom:24px;right:24px;background:var(--green);color:#0a2010;border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(74,222,128,.4)}
+.to-top.on{display:flex}
+</style>
+</head>
+<body>
+<div class="overlay" id="ov"><div class="spin"></div><div style="color:var(--t2);font-size:.85rem">데이터 조회 중...</div></div>
+<button class="to-top" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<header class="hd">
+  <div class="hd-left">
+    <div class="hd-icon">🌱</div>
+    <div>
+      <h1>비료 영업 인텔리전스</h1>
+      <p>농림축산식품부 · 농업경영체 등록정보 기반 영업 타겟 분석 도구</p>
+    </div>
+  </div>
+  <div class="hd-badge" id="badge">로딩 중...</div>
+</header>
+
+<section class="filter">
+  <div class="filter-row">
+    <div class="f-group"><span class="f-label">📅 연도</span>
+      <select id="yrSel"><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option></select>
+    </div>
+    <div class="f-group"><span class="f-label">🗺 시도</span>
+      <select id="sdSel"><option value="">전체</option></select>
+    </div>
+    <div class="f-group"><span class="f-label">🏙 시군구</span>
+      <select id="sgSel"><option value="">전체</option></select>
+    </div>
+    <div class="f-group"><span class="f-label">🌿 대분류</span>
+      <select id="bcSel" onchange="loadItems()"><option value="">전체</option></select>
+    </div>
+    <div class="f-group"><span class="f-label">소품목</span>
+      <select id="mcSel"><option value="">전체</option></select>
+    </div>
+    <button class="btn" onclick="search()">🔍 조회</button>
+    <button class="btn-sm" onclick="resetFilter()">↺ 초기화</button>
+  </div>
+</section>
+
+<!-- 쿠키 연동 배너 -->
+<div id="cookieBanner" style="background:rgba(251,191,36,.08);border-bottom:1px solid rgba(251,191,36,.2);padding:10px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="cookieStatus" style="font-size:0.8rem;color:#fbbf24;font-weight:600">⚠️ 실시간 데이터 미연결 (샘플 표시 중)</span>
+  </div>
+  <button onclick="showCookieGuide()" style="background:rgba(251,191,36,.2);border:1px solid rgba(251,191,36,.4);color:#fbbf24;padding:4px 14px;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:700;font-family:inherit">🔑 실제 데이터 연동하기</button>
+  <span id="cookieOk" style="display:none;font-size:0.8rem;color:#4ade80;font-weight:600">✅ 실시간 데이터 연결됨</span>
+</div>
+
+<!-- 쿠키 연동 가이드 모달 -->
+<div id="cookieModal" style="display:none;position:fixed;inset:0;background:rgba(8,14,30,.92);z-index:300;align-items:center;justify-content:center">
+  <div style="background:#0f1a2e;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:32px;max-width:560px;width:90%">
+    <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:8px">🔑 실시간 데이터 연동 가이드</h2>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:20px">아래 북마클릿을 이용하면 agrix 정부 데이터를 실시간으로 볼 수 있습니다.</p>
+    
+    <div style="background:#1a2840;border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:0.75rem;color:#fbbf24;font-weight:700;margin-bottom:8px">📌 1단계 · 북마클릿 설치</div>
+      <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:10px">아래 버튼을 즐겨찾기 바에 드래그하세요. (또는 새 북마크를 만들고 URL에 아래 코드를 붙여넣으세요)</p>
+      <a id="bookmarkletLink" href="" style="display:inline-block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;padding:8px 18px;border-radius:8px;font-size:0.82rem;font-weight:700;text-decoration:none;cursor:grab">🌱 agrix 데이터 연동</a>
+    </div>
+    
+    <div style="background:#1a2840;border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:0.75rem;color:#60a5fa;font-weight:700;margin-bottom:8px">📌 2단계 · agrix 페이지에서 클릭</div>
+      <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:8px">아래 링크로 agrix를 열고, 설치한 북마클릿을 클릭하세요:</p>
+      <a href="https://uni.agrix.go.kr/docs7/biOlap/fixType.do?reportId=eqpt_oudor_area_item" target="_blank" style="color:#60a5fa;font-size:0.78rem">🔗 agrix 농작물 재배현황 열기 →</a>
+    </div>
+    
+    <div style="background:#1a2840;border-radius:10px;padding:16px;margin-bottom:20px">
+      <div style="font-size:0.75rem;color:#a78bfa;font-weight:700;margin-bottom:8px">📌 3단계 · 이 페이지에서 조회</div>
+      <p style="font-size:0.78rem;color:#94a3b8">연동 완료 후 이 대시보드로 돌아와 <strong>조회 버튼</strong>을 누르면 실제 데이터가 표시됩니다.</p>
+    </div>
+    
+    <div style="display:flex;gap:10px">
+      <button onclick="checkCookieStatus()" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);color:#4ade80;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:700;font-family:inherit">🔄 연결 상태 확인</button>
+      <button onclick="document.getElementById('cookieModal').style.display='none'" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#94a3b8;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit">닫기</button>
+    </div>
+  </div>
+</div>
+
+
+<main class="main">
+  <div class="err" id="errBox"></div>
+  <div class="info" id="infoBox"></div>
+
+  <div class="kpi-grid">
+    <div class="kpi" style="--ac:var(--green)"><div class="kpi-label">총 재배면적</div><div class="kpi-val" id="kArea">-</div><div class="kpi-unit">ha</div><div class="kpi-ico">📐</div></div>
+    <div class="kpi" style="--ac:var(--blue)"><div class="kpi-label">총 경영체 수</div><div class="kpi-val" id="kCnt">-</div><div class="kpi-unit">경영체</div><div class="kpi-ico">🏡</div></div>
+    <div class="kpi" style="--ac:var(--amber)"><div class="kpi-label">경영체당 평균 면적</div><div class="kpi-val" id="kAvg">-</div><div class="kpi-unit">ha / 경영체</div><div class="kpi-ico">⚖️</div></div>
+    <div class="kpi" style="--ac:var(--purple)"><div class="kpi-label">1ha↑ 대농 수</div><div class="kpi-val" id="kLarge">-</div><div class="kpi-unit">경영체 (주요 고객)</div><div class="kpi-ico">🎯</div></div>
+    <div class="kpi" style="--ac:var(--teal)"><div class="kpi-label">대농 비중</div><div class="kpi-val" id="kRatio">-</div><div class="kpi-unit">% (1ha 이상)</div><div class="kpi-ico">📊</div></div>
+    <div class="kpi" style="--ac:var(--rose)"><div class="kpi-label">면적 1위 품목</div><div class="kpi-val" id="kTop" style="font-size:1.1rem;margin-top:4px">-</div><div class="kpi-unit">재배면적 최다 품목</div><div class="kpi-ico">🥇</div></div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="c-card">
+      <div class="c-title" id="regionChartTitle">📍 영업 타겟 지역 TOP 15 (재배면적 기준)</div>
+      <div class="c-sub" id="regionChartSub">면적이 넓을수록 비료 수요가 높은 핵심 영업 지역</div>
+      <div class="c-wrap"><canvas id="regionChart"></canvas></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">🌿 품목별 면적 비중</div>
+      <div class="c-sub">비료 수요 비중이 높은 작물 파악</div>
+      <div class="c-wrap"><canvas id="itemChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="tbl-section">
+    <div class="tbl-top">
+      <div><div class="tbl-ttl">📋 지역 × 품목 영업 분석 테이블</div><div class="tbl-sub">평균 ha가 높을수록 구매력 높은 농가 집중 지역 → 우선 공략 대상</div></div>
+      <input class="search-box" id="tblQ" placeholder="🔍 지역·품목 검색" oninput="filterTbl()"/>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th class="left">시도</th>
+          <th class="left">시군구</th>
+          <th class="left">품목(대분류)</th>
+          <th class="left">소분류</th>
+          <th>경영체 수</th>
+          <th>총면적(ha)</th>
+          <th>평균 ha</th>
+          <th>1ha↑ 대농</th>
+          <th>대농 비중</th>
+          <th>영업 우선도</th>
+        </tr></thead>
+        <tbody id="tblBody"><tr><td colspan="10"><div class="empty">조회 버튼을 눌러 데이터를 불러오세요</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ===== 전역 ===== */
+let ALL=[], RAW_TBL=[], charts={};
+
+/* ===== 서버 환경 감지 =====
+   node server.js 로 실행 시 → 프록시 경로 사용 (실제 데이터)
+   serve 또는 file:// → 샘플 데이터 폴백 */
+const IS_PROXY = location.port === '3031';
+const API_BASE  = IS_PROXY ? '/proxy' : null;
+
+/* ===== 하드코딩 폴백 ===== */
+const SIDO_LIST=[
+  {CODE:'11',CODE_NM:'서울특별시'},{CODE:'26',CODE_NM:'부산광역시'},
+  {CODE:'27',CODE_NM:'대구광역시'},{CODE:'28',CODE_NM:'인천광역시'},
+  {CODE:'29',CODE_NM:'광주광역시'},{CODE:'30',CODE_NM:'대전광역시'},
+  {CODE:'31',CODE_NM:'울산광역시'},{CODE:'36',CODE_NM:'세종특별자치시'},
+  {CODE:'41',CODE_NM:'경기도'},{CODE:'42',CODE_NM:'강원특별자치도'},
+  {CODE:'43',CODE_NM:'충청북도'},{CODE:'44',CODE_NM:'충청남도'},
+  {CODE:'45',CODE_NM:'전북특별자치도'},{CODE:'46',CODE_NM:'전라남도'},
+  {CODE:'47',CODE_NM:'경상북도'},{CODE:'48',CODE_NM:'경상남도'},
+  {CODE:'50',CODE_NM:'제주특별자치도'},
+];
+const SIGU_MAP={
+  '11':[{CODE:'11110',CODE_NM:'종로구'},{CODE:'11140',CODE_NM:'중구'},{CODE:'11170',CODE_NM:'용산구'},{CODE:'11200',CODE_NM:'성동구'},{CODE:'11215',CODE_NM:'광진구'},{CODE:'11230',CODE_NM:'동대문구'},{CODE:'11260',CODE_NM:'중랑구'},{CODE:'11290',CODE_NM:'성북구'},{CODE:'11305',CODE_NM:'강북구'},{CODE:'11320',CODE_NM:'도봉구'},{CODE:'11350',CODE_NM:'노원구'},{CODE:'11380',CODE_NM:'은평구'},{CODE:'11410',CODE_NM:'서대문구'},{CODE:'11440',CODE_NM:'마포구'},{CODE:'11470',CODE_NM:'양천구'},{CODE:'11500',CODE_NM:'강서구'},{CODE:'11530',CODE_NM:'구로구'},{CODE:'11545',CODE_NM:'금천구'},{CODE:'11560',CODE_NM:'영등포구'},{CODE:'11590',CODE_NM:'동작구'},{CODE:'11620',CODE_NM:'관악구'},{CODE:'11650',CODE_NM:'서초구'},{CODE:'11680',CODE_NM:'강남구'},{CODE:'11710',CODE_NM:'송파구'},{CODE:'11740',CODE_NM:'강동구'}],
+  '26':[{CODE:'26110',CODE_NM:'중구'},{CODE:'26140',CODE_NM:'서구'},{CODE:'26170',CODE_NM:'동구'},{CODE:'26200',CODE_NM:'영도구'},{CODE:'26230',CODE_NM:'부산진구'},{CODE:'26260',CODE_NM:'동래구'},{CODE:'26290',CODE_NM:'남구'},{CODE:'26320',CODE_NM:'북구'},{CODE:'26350',CODE_NM:'해운대구'},{CODE:'26380',CODE_NM:'사하구'},{CODE:'26410',CODE_NM:'금정구'},{CODE:'26440',CODE_NM:'강서구'},{CODE:'26470',CODE_NM:'연제구'},{CODE:'26500',CODE_NM:'수영구'},{CODE:'26530',CODE_NM:'사상구'},{CODE:'26710',CODE_NM:'기장군'}],
+  '27':[{CODE:'27110',CODE_NM:'중구'},{CODE:'27140',CODE_NM:'동구'},{CODE:'27170',CODE_NM:'서구'},{CODE:'27200',CODE_NM:'남구'},{CODE:'27230',CODE_NM:'북구'},{CODE:'27260',CODE_NM:'수성구'},{CODE:'27290',CODE_NM:'달서구'},{CODE:'27710',CODE_NM:'달성군'},{CODE:'27720',CODE_NM:'군위군'}],
+  '28':[{CODE:'28110',CODE_NM:'중구'},{CODE:'28140',CODE_NM:'동구'},{CODE:'28177',CODE_NM:'미추홀구'},{CODE:'28185',CODE_NM:'연수구'},{CODE:'28200',CODE_NM:'남동구'},{CODE:'28237',CODE_NM:'부평구'},{CODE:'28245',CODE_NM:'계양구'},{CODE:'28260',CODE_NM:'서구'},{CODE:'28710',CODE_NM:'강화군'},{CODE:'28720',CODE_NM:'옹진군'}],
+  '29':[{CODE:'29110',CODE_NM:'동구'},{CODE:'29140',CODE_NM:'서구'},{CODE:'29155',CODE_NM:'남구'},{CODE:'29170',CODE_NM:'북구'},{CODE:'29200',CODE_NM:'광산구'}],
+  '30':[{CODE:'30110',CODE_NM:'동구'},{CODE:'30140',CODE_NM:'중구'},{CODE:'30170',CODE_NM:'서구'},{CODE:'30200',CODE_NM:'유성구'},{CODE:'30230',CODE_NM:'대덕구'}],
+  '31':[{CODE:'31110',CODE_NM:'중구'},{CODE:'31140',CODE_NM:'남구'},{CODE:'31170',CODE_NM:'동구'},{CODE:'31200',CODE_NM:'북구'},{CODE:'31710',CODE_NM:'울주군'}],
+  '36':[{CODE:'36110',CODE_NM:'세종시'}],
+  '41':[{CODE:'41111',CODE_NM:'수원시'},{CODE:'41130',CODE_NM:'성남시'},{CODE:'41150',CODE_NM:'의정부시'},{CODE:'41171',CODE_NM:'안양시'},{CODE:'41190',CODE_NM:'부천시'},{CODE:'41210',CODE_NM:'광명시'},{CODE:'41220',CODE_NM:'평택시'},{CODE:'41250',CODE_NM:'동두천시'},{CODE:'41271',CODE_NM:'안산시'},{CODE:'41290',CODE_NM:'고양시'},{CODE:'41310',CODE_NM:'과천시'},{CODE:'41360',CODE_NM:'구리시'},{CODE:'41370',CODE_NM:'남양주시'},{CODE:'41390',CODE_NM:'오산시'},{CODE:'41410',CODE_NM:'시흥시'},{CODE:'41430',CODE_NM:'군포시'},{CODE:'41450',CODE_NM:'의왕시'},{CODE:'41461',CODE_NM:'하남시'},{CODE:'41480',CODE_NM:'용인시'},{CODE:'41500',CODE_NM:'파주시'},{CODE:'41550',CODE_NM:'이천시'},{CODE:'41570',CODE_NM:'안성시'},{CODE:'41590',CODE_NM:'김포시'},{CODE:'41610',CODE_NM:'화성시'},{CODE:'41630',CODE_NM:'광주시'},{CODE:'41650',CODE_NM:'양주시'},{CODE:'41670',CODE_NM:'포천시'},{CODE:'41800',CODE_NM:'여주시'},{CODE:'41820',CODE_NM:'연천군'},{CODE:'41830',CODE_NM:'가평군'},{CODE:'41840',CODE_NM:'양평군'}],
+  '42':[{CODE:'42110',CODE_NM:'춘천시'},{CODE:'42130',CODE_NM:'원주시'},{CODE:'42150',CODE_NM:'강릉시'},{CODE:'42170',CODE_NM:'동해시'},{CODE:'42190',CODE_NM:'태백시'},{CODE:'42210',CODE_NM:'속초시'},{CODE:'42230',CODE_NM:'삼척시'},{CODE:'42720',CODE_NM:'홍천군'},{CODE:'42730',CODE_NM:'횡성군'},{CODE:'42750',CODE_NM:'영월군'},{CODE:'42760',CODE_NM:'평창군'},{CODE:'42770',CODE_NM:'정선군'},{CODE:'42780',CODE_NM:'철원군'},{CODE:'42790',CODE_NM:'화천군'},{CODE:'42800',CODE_NM:'양구군'},{CODE:'42810',CODE_NM:'인제군'},{CODE:'42820',CODE_NM:'고성군'},{CODE:'42830',CODE_NM:'양양군'}],
+  '43':[{CODE:'43110',CODE_NM:'청주시'},{CODE:'43130',CODE_NM:'충주시'},{CODE:'43150',CODE_NM:'제천시'},{CODE:'43720',CODE_NM:'보은군'},{CODE:'43730',CODE_NM:'옥천군'},{CODE:'43740',CODE_NM:'영동군'},{CODE:'43745',CODE_NM:'증평군'},{CODE:'43750',CODE_NM:'진천군'},{CODE:'43760',CODE_NM:'괴산군'},{CODE:'43770',CODE_NM:'음성군'},{CODE:'43800',CODE_NM:'단양군'}],
+  '44':[{CODE:'44130',CODE_NM:'천안시'},{CODE:'44150',CODE_NM:'공주시'},{CODE:'44180',CODE_NM:'보령시'},{CODE:'44195',CODE_NM:'아산시'},{CODE:'44200',CODE_NM:'서산시'},{CODE:'44210',CODE_NM:'논산시'},{CODE:'44230',CODE_NM:'계룡시'},{CODE:'44250',CODE_NM:'당진시'},{CODE:'44710',CODE_NM:'금산군'},{CODE:'44760',CODE_NM:'부여군'},{CODE:'44770',CODE_NM:'서천군'},{CODE:'44790',CODE_NM:'청양군'},{CODE:'44800',CODE_NM:'홍성군'},{CODE:'44810',CODE_NM:'예산군'},{CODE:'44825',CODE_NM:'태안군'}],
+  '45':[{CODE:'45111',CODE_NM:'전주시'},{CODE:'45130',CODE_NM:'군산시'},{CODE:'45140',CODE_NM:'익산시'},{CODE:'45180',CODE_NM:'정읍시'},{CODE:'45190',CODE_NM:'남원시'},{CODE:'45210',CODE_NM:'김제시'},{CODE:'45710',CODE_NM:'완주군'},{CODE:'45720',CODE_NM:'진안군'},{CODE:'45730',CODE_NM:'무주군'},{CODE:'45740',CODE_NM:'장수군'},{CODE:'45750',CODE_NM:'임실군'},{CODE:'45770',CODE_NM:'순창군'},{CODE:'45790',CODE_NM:'고창군'},{CODE:'45800',CODE_NM:'부안군'}],
+  '46':[{CODE:'46110',CODE_NM:'목포시'},{CODE:'46130',CODE_NM:'여수시'},{CODE:'46150',CODE_NM:'순천시'},{CODE:'46170',CODE_NM:'나주시'},{CODE:'46230',CODE_NM:'광양시'},{CODE:'46710',CODE_NM:'담양군'},{CODE:'46720',CODE_NM:'곡성군'},{CODE:'46730',CODE_NM:'구례군'},{CODE:'46770',CODE_NM:'고흥군'},{CODE:'46780',CODE_NM:'보성군'},{CODE:'46790',CODE_NM:'화순군'},{CODE:'46800',CODE_NM:'장흥군'},{CODE:'46810',CODE_NM:'강진군'},{CODE:'46820',CODE_NM:'해남군'},{CODE:'46830',CODE_NM:'영암군'},{CODE:'46840',CODE_NM:'무안군'},{CODE:'46860',CODE_NM:'함평군'},{CODE:'46870',CODE_NM:'영광군'},{CODE:'46880',CODE_NM:'장성군'},{CODE:'46890',CODE_NM:'완도군'},{CODE:'46900',CODE_NM:'진도군'},{CODE:'46910',CODE_NM:'신안군'}],
+  '47':[{CODE:'47110',CODE_NM:'포항시'},{CODE:'47130',CODE_NM:'경주시'},{CODE:'47150',CODE_NM:'김천시'},{CODE:'47170',CODE_NM:'안동시'},{CODE:'47190',CODE_NM:'구미시'},{CODE:'47210',CODE_NM:'영주시'},{CODE:'47230',CODE_NM:'영천시'},{CODE:'47250',CODE_NM:'상주시'},{CODE:'47280',CODE_NM:'문경시'},{CODE:'47290',CODE_NM:'경산시'},{CODE:'47720',CODE_NM:'의성군'},{CODE:'47730',CODE_NM:'청송군'},{CODE:'47740',CODE_NM:'영양군'},{CODE:'47750',CODE_NM:'영덕군'},{CODE:'47760',CODE_NM:'청도군'},{CODE:'47770',CODE_NM:'고령군'},{CODE:'47780',CODE_NM:'성주군'},{CODE:'47790',CODE_NM:'칠곡군'},{CODE:'47820',CODE_NM:'예천군'},{CODE:'47830',CODE_NM:'봉화군'},{CODE:'47840',CODE_NM:'울진군'},{CODE:'47850',CODE_NM:'울릉군'}],
+  '48':[{CODE:'48121',CODE_NM:'창원시'},{CODE:'48170',CODE_NM:'진주시'},{CODE:'48220',CODE_NM:'통영시'},{CODE:'48240',CODE_NM:'사천시'},{CODE:'48250',CODE_NM:'김해시'},{CODE:'48270',CODE_NM:'밀양시'},{CODE:'48310',CODE_NM:'거제시'},{CODE:'48330',CODE_NM:'양산시'},{CODE:'48720',CODE_NM:'의령군'},{CODE:'48730',CODE_NM:'함안군'},{CODE:'48740',CODE_NM:'창녕군'},{CODE:'48820',CODE_NM:'고성군'},{CODE:'48840',CODE_NM:'남해군'},{CODE:'48850',CODE_NM:'하동군'},{CODE:'48860',CODE_NM:'산청군'},{CODE:'48870',CODE_NM:'함양군'},{CODE:'48880',CODE_NM:'거창군'},{CODE:'48890',CODE_NM:'합천군'}],
+  '50':[{CODE:'50110',CODE_NM:'제주시'},{CODE:'50130',CODE_NM:'서귀포시'}],
+};
+const ITEM_TREE={
+  '미곡류':{code:'01',items:{'일반벼':'0101','찰벼':'0102','밭벼':'0103'}},
+  '맥류':{code:'02',items:{'보리':'0201','밀':'0202','호밀':'0203','귀리':'0204'}},
+  '두류':{code:'03',items:{'콩':'0301','팥':'0302','녹두':'0303','땅콩':'0304'}},
+  '잡곡류':{code:'04',items:{'옥수수':'0401','수수':'0402','기장':'0403','조':'0404'}},
+  '서류':{code:'05',items:{'감자':'0501','고구마':'0502','토란':'0503'}},
+  '과실류':{code:'06',items:{'사과':'0601','배':'0602','복숭아':'0603','포도':'0604','감귤':'0605','단감':'0606','자두':'0607','매실':'0608','블루베리':'0611','키위':'0612'}},
+  '과채류':{code:'07',items:{'수박':'0701','참외':'0702','딸기':'0703','토마토':'0704','오이':'0705','호박':'0706','가지':'0707','파프리카':'0709','멜론':'0710'}},
+  '엽경채류':{code:'08',items:{'배추':'0801','양배추':'0802','상추':'0803','시금치':'0804','깻잎':'0805','쑥갓':'0806','미나리':'0807','아욱':'0809'}},
+  '조미채류':{code:'09',items:{'고추':'0901','마늘':'0902','양파':'0903','파':'0904','생강':'0905','부추':'0906','쪽파':'0907'}},
+  '근채류':{code:'10',items:{'무':'1001','당근':'1002','우엉':'1003','연근':'1004','비트':'1005'}},
+  '특용작물':{code:'11',items:{'참깨':'1101','들깨':'1102','인삼':'1105','버섯':'1108'}},
+  '사료작물':{code:'12',items:{'사료용옥수수':'1201','청보리':'1203','라이그라스':'1204'}},
+};
+
+/* ===== API 호출 ===== */
+async function callAPI(path, body) {
+  if(!IS_PROXY) return undefined; // 프록시 없으면 undefined
+  try {
+    const r = await fetch(`/proxy/${path}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body: new URLSearchParams(body).toString(),
+      signal: AbortSignal.timeout(5000)
+    });
+    if(!r.ok) return undefined;
+    const j = await r.json();
+    return j.data || j.result || j || undefined;
+  } catch(e){ return undefined; }
+}
+
+/* ===== 필터 초기화 ===== */
+async function initFilters() {
+  // 시도
+  const sidoApi = await callAPI('common/ComboBoxData.do', {
+    methodName:'sido', reportId:'eqpt_oudor_area_item', searchYear:v('yrSel')
+  });
+  fillSel('sdSel', sidoApi?.length ? sidoApi : SIDO_LIST, '전체');
+
+  // 대분류 (하드코딩)
+  const bcSel = document.getElementById('bcSel');
+  bcSel.innerHTML = '<option value="">전체</option>';
+  Object.entries(ITEM_TREE).forEach(([nm,val]) => {
+    bcSel.innerHTML += `<option value="${val.code}">${nm}</option>`;
+  });
+}
+
+/* 시도 → 시군구 */
+document.getElementById('sdSel').addEventListener('change', async function(){
+  const sido = this.value;
+  fillSel('sgSel', [], '전체');
+  if(!sido) return;
+  const api = await callAPI('common/ComboBoxData.do', {methodName:'sigu', reportId:'eqpt_oudor_area_item', searchYear:v('yrSel'), sidoCd:sido});
+  fillSel('sgSel', (api?.length ? api : SIGU_MAP[sido]) || [], '시군구 선택');
+});
+
+/* 대분류 → 소품목 */
+async function loadItems() {
+  const bcCode = v('bcSel');
+  fillSel('mcSel', [], '전체');
+  if(!bcCode) return;
+  const bcNm = Object.entries(ITEM_TREE).find(([,v])=>v.code===bcCode)?.[0];
+  if(bcNm){
+    const mcSel = document.getElementById('mcSel');
+    mcSel.innerHTML = '<option value="">전체</option>';
+    Object.entries(ITEM_TREE[bcNm].items).forEach(([nm,code])=>{
+      mcSel.innerHTML += `<option value="${code}">${nm}</option>`;
+    });
+  }
+}
+
+function fillSel(id, arr, ph) {
+  const el = document.getElementById(id);
+  el.innerHTML = `<option value="">${ph}</option>`;
+  arr.forEach(d => {
+    const code = d.CODE||d.code||'';
+    const nm = d.CODE_NM||d.name||code;
+    el.innerHTML += `<option value="${code}">${nm}</option>`;
+  });
+}
+
+function resetFilter() {
+  fillSel('sgSel',[],'전체'); fillSel('mcSel',[],'전체');
+  initFilters();
+}
+
+/* ===== 메인 조회 ===== */
+async function search() {
+  setLoading(true); hideMsg();
+  const yr=v('yrSel'), sd=v('sdSel'), sg=v('sgSel'), bc=v('bcSel'), mc=v('mcSel');
+
+  // 프록시 없음 → 바로 샘플
+  if(!IS_PROXY) {
+    showInfo('⚠️ 실시간 데이터를 보려면 <strong>node server.js</strong> 후 <strong>http://localhost:3031</strong> 에 접속하세요. 현재는 샘플 데이터입니다.');
+    ALL = makeSample(yr); render(ALL, yr, !!sg);
+    setLoading(false); return;
+  }
+
+  try {
+    const body = {reportId:'eqpt_oudor_area_item', searchYear:yr, pageNo:1, pageRows:9999,
+      ...(sd?{sidoCd:sd}:{}), ...(sg?{siguCd:sg}:{}),
+      ...(bc?{bclsCd:bc}:{}), ...(mc?{sclsCd:mc}:{})};
+    const r = await fetch('/proxy/search.do', {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body: new URLSearchParams(body).toString()
+    });
+    const j = await r.json();
+
+    // 프록시가 {error:true} 반환 = agrix 세션 문제
+    if(j.error) {
+      showInfo('⚠️ agrix 세션 미연결 — 샘플 데이터로 표시합니다.<br>상단 <strong>🔑 실제 데이터 연동하기</strong> 버튼을 눌러 연동하세요.');
+      ALL = makeSample(yr); render(ALL, yr, !!sg);
+      setLoading(false); return;
+    }
+
+    const data = j.result||j.data||(Array.isArray(j)?j:[]);
+    if(!data||data.length===0) {
+      // 실제 데이터 없음 → 샘플로 전체 렌더
+      showErr('조회 결과가 없습니다. 필터 조건을 바꿔보세요.');
+      ALL = makeSample(yr); render(ALL, yr, !!sg);
+      setLoading(false); return;
+    }
+
+    ALL = data; render(data, yr, !!sg);
+  } catch(err) {
+    showErr('API 호출 실패: ' + err.message);
+    ALL = makeSample(yr); render(ALL, yr, !!sg);
+  } finally {
+    setLoading(false);
+  }
+}
+
+
+/* ===== 렌더링 ===== */
+function render(data, yr, isSigu) {
+  document.getElementById('badge').textContent = `📅 ${yr}년 기준 · ${data.length}건`;
+  renderKPI(data);
+  renderRegion(data, isSigu);
+  renderItem(data);
+  RAW_TBL = data;
+  renderTbl(data);
+}
+
+/* ===== KPI ===== */
+function renderKPI(data) {
+  const area = data.reduce((s,d)=>s+(parseFloat(d.rlAgrldAra)||0),0);
+  const cnt  = data.reduce((s,d)=>s+(parseInt(d.nagrldCnt)||0),0);
+  const large= data.reduce((s,d)=>s+(parseInt(d.ncnt05)||0)+(parseInt(d.ncnt06)||0)+(parseInt(d.ncnt07)||0)+(parseInt(d.ncnt08)||0)+(parseInt(d.ncnt09)||0),0);
+  const itemMap={};
+  data.forEach(d=>{const nm=d.bclsCdNm||'기타';itemMap[nm]=(itemMap[nm]||0)+(parseFloat(d.rlAgrldAra)||0);});
+  const top=Object.entries(itemMap).sort((a,b)=>b[1]-a[1])[0];
+  anim('kArea',area,1); anim('kCnt',cnt,0); anim('kAvg',cnt>0?area/cnt:0,2);
+  anim('kLarge',large,0); anim('kRatio',cnt>0?large/cnt*100:0,1);
+  document.getElementById('kTop').textContent = top?top[0]:'-';
+}
+function anim(id,target,dec){
+  const el=document.getElementById(id),t=performance.now();
+  const s=now=>{const p=Math.min((now-t)/700,1),e=1-Math.pow(1-p,3);
+    el.textContent=(target*e).toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+    if(p<1)requestAnimationFrame(s);};
+  requestAnimationFrame(s);
+}
+
+/* ===== 지역 차트 =====
+   시군구 선택 시 → 시군구명 기준으로 집계
+   시도만 선택 시 → 시도명 기준 집계 */
+function renderRegion(data, isSigu) {
+  const map={};
+  data.forEach(d=>{
+    // 시군구 선택됐을 때: agrldSgNm(시군구명) 우선, 없으면 읍면동 수준
+    const nm = isSigu
+      ? (d.agrldSgNm || d.siguNm || d.agrldSdNm || '기타')
+      : (d.agrldSdNm||'기타').replace(/특별시|광역시|특별자치시|특별자치도/g,'').replace('도','');
+    map[nm]=(map[nm]||0)+(parseFloat(d.rlAgrldAra)||0);
+  });
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+  // 차트 제목 업데이트
+  const titleEl = document.getElementById('regionChartTitle');
+  const subEl = document.getElementById('regionChartSub');
+  if(isSigu){
+    titleEl.textContent='📍 시군구 내 읍면동 TOP 15 (재배면적 기준)';
+    subEl.textContent='선택한 시군구 내 면적 상위 지역';
+  } else {
+    titleEl.textContent='📍 영업 타겟 지역 TOP 15 (재배면적 기준)';
+    subEl.textContent='면적이 넓을수록 비료 수요가 높은 핵심 영업 지역';
+  }
+
+  destroy('regionChart');
+  const ctx=document.getElementById('regionChart').getContext('2d');
+  charts.region=new Chart(ctx,{
+    type:'bar',
+    data:{labels:sorted.map(e=>e[0]),datasets:[{
+      label:'재배면적(ha)',data:sorted.map(e=>parseFloat(e[1].toFixed(1))),
+      backgroundColor:'rgba(74,222,128,.65)',borderColor:'rgba(74,222,128,1)',
+      borderWidth:1,borderRadius:5,borderSkipped:false
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y.toLocaleString()} ha`}}},
+      scales:{
+        x:{ticks:{color:'#94a3b8',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#94a3b8',font:{size:10},callback:v=>v.toLocaleString()},grid:{color:'rgba(255,255,255,.04)'}}
+      }}
+  });
+}
+
+/* ===== 품목 도넛 ===== */
+function renderItem(data) {
+  const map={};
+  data.forEach(d=>{const nm=d.bclsCdNm||'기타';map[nm]=(map[nm]||0)+(parseFloat(d.rlAgrldAra)||0);});
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const C=['#4ade80','#60a5fa','#fbbf24','#a78bfa','#f87171','#2dd4bf','#fb923c','#a3e635','#818cf8','#e879f9'];
+  destroy('itemChart');
+  const ctx=document.getElementById('itemChart').getContext('2d');
+  charts.item=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:sorted.map(e=>e[0]),datasets:[{
+      data:sorted.map(e=>parseFloat(e[1].toFixed(1))),
+      backgroundColor:C,borderColor:'#0f1a2e',borderWidth:3,hoverOffset:8
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:10},boxWidth:10,padding:6}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${parseFloat(c.parsed).toLocaleString()} ha`}}}}
+  });
+}
+
+/* ===== 테이블 ===== */
+function renderTbl(data) {
+  const body=document.getElementById('tblBody');
+  if(!data||data.length===0){
+    body.innerHTML=`<tr><td colspan="10"><div class="empty">📭 데이터 없음</div></td></tr>`;
+    return;
+  }
+  const tot={cnt:0,ara:0,large:0};
+  data.forEach(d=>{
+    tot.cnt+=(parseInt(d.nagrldCnt)||0);
+    tot.ara+=(parseFloat(d.rlAgrldAra)||0);
+    tot.large+=(parseInt(d.ncnt05)||0)+(parseInt(d.ncnt06)||0)+(parseInt(d.ncnt07)||0)+(parseInt(d.ncnt08)||0)+(parseInt(d.ncnt09)||0);
+  });
+
+  const rows=data.slice(0,500).map(d=>{
+    const cnt=parseInt(d.nagrldCnt)||0;
+    const ara=parseFloat(d.rlAgrldAra)||0;
+    const avg=cnt>0?(ara/cnt):0;
+    const large=(parseInt(d.ncnt05)||0)+(parseInt(d.ncnt06)||0)+(parseInt(d.ncnt07)||0)+(parseInt(d.ncnt08)||0)+(parseInt(d.ncnt09)||0);
+    const ratio=cnt>0?(large/cnt*100):0;
+    // 시군구 필드: agrldSgNm 또는 siguNm 사용
+    const sgNm = d.agrldSgNm||d.siguNm||'-';
+    const scNm = d.sclsCdNm||d.mclsCdNm||'-';
+    return `<tr>
+      <td class="left">${d.agrldSdNm||'-'}</td>
+      <td class="sec">${sgNm}</td>
+      <td class="sec">${d.bclsCdNm||'-'}</td>
+      <td class="sec">${scNm}</td>
+      <td>${cnt.toLocaleString()}</td>
+      <td>${ara.toFixed(1)}</td>
+      <td style="color:var(--blue);font-weight:600">${avg.toFixed(2)}</td>
+      <td>${large.toLocaleString()}</td>
+      <td>${ratio.toFixed(1)}%</td>
+      <td>${prio(avg,ratio)}</td>
+    </tr>`;
+  }).join('');
+
+  const ta=tot.cnt>0?(tot.ara/tot.cnt).toFixed(2):'-';
+  const tr=tot.cnt>0?(tot.large/tot.cnt*100).toFixed(1):'-';
+  const totRow=`<tr class="tot">
+    <td class="left">합계</td><td>-</td><td>${data.length}개 품목</td><td>-</td>
+    <td>${tot.cnt.toLocaleString()}</td><td>${tot.ara.toFixed(1)}</td>
+    <td style="font-weight:700">${ta}</td>
+    <td>${tot.large.toLocaleString()}</td><td>${tr}%</td><td>-</td>
+  </tr>`;
+  body.innerHTML=totRow+rows;
+}
+
+/* 영업 우선도 */
+function prio(avg,ratio){
+  if(avg>=3&&ratio>=30) return '<span class="badge s">🔴 S (핵심)</span>';
+  if(avg>=1||ratio>=20) return '<span class="badge a">🟢 A (우선)</span>';
+  if(avg>=0.5||ratio>=10) return '<span class="badge b">🟡 B (일반)</span>';
+  if(avg>=0.3) return '<span class="badge c">🔵 C (소농)</span>';
+  return '<span class="badge d">⚪ D (초소농)</span>';
+}
+
+function filterTbl(){
+  const q=document.getElementById('tblQ').value.trim().toLowerCase();
+  renderTbl(q?RAW_TBL.filter(d=>(d.agrldSdNm||'').toLowerCase().includes(q)||(d.bclsCdNm||'').toLowerCase().includes(q)||(d.sclsCdNm||'').toLowerCase().includes(q)||(d.agrldSgNm||'').toLowerCase().includes(q)):RAW_TBL);
+}
+
+/* ===== 샘플 데이터 ===== */
+function makeSample(yr){
+  const sidos=['서울특별시','부산광역시','대구광역시','인천광역시','경기도','강원특별자치도','충청남도','전북특별자치도','전라남도','경상북도','경상남도','제주특별자치도'];
+  const items=[{b:'미곡류',s:'일반벼'},{b:'미곡류',s:'찰벼'},{b:'과실류',s:'사과'},{b:'과실류',s:'배'},{b:'과실류',s:'포도'},{b:'과채류',s:'딸기'},{b:'과채류',s:'토마토'},{b:'과채류',s:'오이'},{b:'엽경채류',s:'배추'},{b:'조미채류',s:'고추'},{b:'조미채류',s:'마늘'},{b:'조미채류',s:'양파'},{b:'서류',s:'감자'},{b:'두류',s:'콩'},{b:'특용작물',s:'참깨'}];
+  const rnd=(a,b)=>Math.random()*(b-a)+a;
+  const data=[];
+  sidos.forEach(sido=>{
+    items.slice(0,4+Math.floor(Math.random()*6)).forEach(it=>{
+      const cnt=Math.round(rnd(30,3000));
+      const avg=rnd(0.2,3.5);
+      const ara=cnt*avg;
+      const w=[.30,.22,.15,.10,.09,.05,.04,.03,.02];
+      const cnts=w.map(x=>Math.round(cnt*x*(0.6+Math.random()*0.8)));
+      const row={agrldSdNm:sido,agrldSgNm:'-',bclsCdNm:it.b,sclsCdNm:it.s,nagrldCnt:cnt,rlAgrldAra:ara.toFixed(2)};
+      ['ncnt01','ncnt02','ncnt03','ncnt04','ncnt05','ncnt06','ncnt07','ncnt08','ncnt09'].forEach((k,i)=>row[k]=cnts[i]);
+      data.push(row);
+    });
+  });
+  return data;
+}
+
+/* ===== 유틸 ===== */
+function v(id){return document.getElementById(id).value}
+function destroy(id){
+  // Chart.getChart()로 캔버스에 남은 차트 인스턴스까지 모두 제거
+  const el = document.getElementById(id);
+  if(el){ const existing = Chart.getChart(el); if(existing) existing.destroy(); }
+  if(charts[id]){ try{charts[id].destroy();}catch(e){} delete charts[id]; }
+}
+function setLoading(on){document.getElementById('ov').classList.toggle('on',on)}
+function showErr(msg){const e=document.getElementById('errBox');e.innerHTML=msg;e.classList.add('on')}
+function showInfo(msg){const e=document.getElementById('infoBox');e.innerHTML=msg;e.classList.add('on')}
+function hideMsg(){['errBox','infoBox'].forEach(id=>document.getElementById(id).classList.remove('on'))}
+window.addEventListener('scroll',()=>document.getElementById('toTop').classList.toggle('on',scrollY>300));
+/* ===== 북마클릿 & 쿠키 연동 ===== */
+
+// 북마클릿 코드: agrix 페이지에서 클릭 시 쿠키를 localhost:3031로 전송
+const BOOKMARKLET_CODE = `javascript:(function(){
+  fetch('http://localhost:3031/set-cookies',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({cookies:document.cookie})
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok) alert('✅ agrix 쿠키 연동 완료! 대시보드로 돌아가서 조회하세요.');
+    else alert('❌ 연동 실패. 서버가 실행 중인지 확인하세요.');
+  }).catch(()=>alert('❌ 서버 연결 실패 (node server.js가 실행 중인지 확인)'));
+})();`;
+
+function showCookieGuide() {
+  // 북마클릿 링크에 코드 설정
+  document.getElementById('bookmarkletLink').href = BOOKMARKLET_CODE;
+  document.getElementById('cookieModal').style.display = 'flex';
+}
+
+async function checkCookieStatus() {
+  if(!IS_PROXY) return;
+  try {
+    const r = await fetch('/cookie-status');
+    const d = await r.json();
+    if(d.hasSession) {
+      document.getElementById('cookieStatus').style.display = 'none';
+      document.getElementById('cookieOk').style.display = 'inline';
+      document.querySelector('#cookieBanner button').style.display = 'none';
+      document.getElementById('cookieModal').style.display = 'none';
+      // 자동으로 실제 데이터 조회
+      search();
+    } else {
+      alert('아직 쿠키가 전달되지 않았습니다.\nagrix 페이지에서 북마클릿을 클릭해주세요.');
+    }
+  } catch(e) { console.warn('상태 확인 실패', e); }
+}
+
+// 페이지 로드 시 쿠키 상태만 확인 (search는 호출 안 함)
+async function initCookieStatus() {
+  if(!IS_PROXY) return;
+  try {
+    const r = await fetch('/cookie-status');
+    const d = await r.json();
+    if(d.hasSession) {
+      document.getElementById('cookieStatus').style.display = 'none';
+      document.getElementById('cookieOk').style.display = 'inline';
+      document.querySelector('#cookieBanner button').style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  await initFilters();
+  await initCookieStatus();
+  search(); // 딱 한 번만 호출
+});
+
+</script>
+</body>
+</html>

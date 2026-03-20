@@ -1,0 +1,13 @@
+{
+  "name": "agrix-fertilizer-dashboard",
+  "version": "1.0.0",
+  "description": "비료 영업 인텔리전스 대시보드 - 농업경영체 데이터 기반 영업 타겟 분석",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
